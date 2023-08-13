@@ -13,6 +13,7 @@
    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
    <script>
       $(document).ready(function () {
+         // load data login
          function getQueryParam(param) {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get(param);
@@ -29,18 +30,53 @@
             $('#statusConnectGoogle').text('Connected');
             $('#mainTitle').text(`Welcome back ${dataObject.firstName} ${dataObject.lastName}!`);
             dataObject.statusGoogle = 'Connected';
+            localStorage.setItem('yourLocalStorageKey', JSON.stringify(dataObject));
          }
 
-         $('#statusConnectGoogle').click(function () {
-            if ($('#statusConnectGoogle').val().trim() === 'Connected') {
-               if (confirm('Are you sure you want to disconnect?')) {
-                  $('#statusConnectGoogle').text('Unconnected');
+         // handle unlink/link google
+         $('#statusConnectGoogle').click(() => {
+            if ($('#statusConnectGoogle').text() === 'Unconnected') {
+               window.location.href = 'http://localhost:3000/google';
+            } else {
+               const confirmUnconnect = confirm('Are you sure to unconnect?');
+               if (confirmUnconnect) {
                   $('#google').text('Google');
+                  $('#statusConnectGoogle').text('Unconnected');
+                  const savedData = localStorage.getItem('yourLocalStorageKey');
+                  const dataObject = JSON.parse(savedData);
                   dataObject.statusGoogle = 'Unconnected';
+                  localStorage.setItem('yourLocalStorageKey', JSON.stringify(dataObject));
+                  $('#statusConnectGoogle').removeClass('btn-success');
+                  $('#statusConnectGoogle').addClass('btn-light');
+
+                  const deleteGraphlQuery = `
+                  mutation unlinkConnectedGoogle {
+                     unlinkConnectGoogle(email: "${dataObject.email}") {
+  		                  email
+                     }
+                  }
+                  `;
+
+                  $.ajax({
+                     url: 'http://localhost:3000/graphql',
+                     method: 'POST',
+                     contentType: 'application/json',
+                     data: JSON.stringify({
+                        query: deleteGraphlQuery,
+                        variables: {
+                           ownerId: dataObject.owner.id
+                        }
+                     }),
+                     success: (res) => {
+                        console.log(res);
+                     },
+                     error: (err) => {
+                        console.log(err);
+                     }
+                  })
                }
             }
-         });
-
+         })
       });
    </script>
 </head>
@@ -79,9 +115,9 @@
                            <div class="no-wrap">
                               <div class="item-date text-muted text-sm d-none d-md-block">
                                  <a href="#">
-                                    <span id="statusConnectGoogle">
+                                    <button id="statusConnectGoogle" class="btn btn-success">
                                        Unconnected
-                                    </span>
+                                    </button>
                                  </a>
                               </div>
                            </div>
