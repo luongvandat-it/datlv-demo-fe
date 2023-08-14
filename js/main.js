@@ -29,10 +29,8 @@ $(document).ready(() => {
                         accessToken: res.data.login.accessToken,
                         ownerId: res.data.login.ownerId
                     };
+                    
                     localStorage.setItem('dataLogin', JSON.stringify(dataLogin));
-
-                   
-
                     window.location.href = './html/home.html';
                 } else {
                     alert('Login failed!');

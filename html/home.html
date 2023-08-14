@@ -13,7 +13,6 @@
    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
    <script src="../js/home.js"></script>
    <script>
-
       $(document).ready(function () {
          // load data login
          function getQueryParam(param) {
@@ -22,8 +21,9 @@
          }
 
          const dataFromQueryParam = getQueryParam('data');
+         const dataFromQueryParamObject = JSON.parse(dataFromQueryParam);
 
-         if (dataFromQueryParam) {
+         if (dataFromQueryParamObject.provider === 'google') {
             localStorage.setItem('yourLocalStorageKey', dataFromQueryParam);
             const savedData = localStorage.getItem('yourLocalStorageKey');
             console.log('Data from localStorage:', savedData);
@@ -36,12 +36,25 @@
             $('#imgUserLogin').attr('src', dataObject.picture);
          }
 
+         if(dataFromQueryParamObject.provider === 'facebook') {
+            localStorage.setItem('yourLocalStorageKey', dataFromQueryParam);
+            const savedData = localStorage.getItem('yourLocalStorageKey');
+            console.log('Data from localStorage:', savedData);
+            const dataObject = JSON.parse(savedData);
+            $('#facebook').text(`${dataObject.firstName} ${dataObject.lastName}`);
+            $('#statusConnectFacebook').text('Connected');
+            $('#mainTitle').text(`Welcome back ${dataObject.firstName} ${dataObject.lastName}!`);
+            dataObject.statusFacebook = 'Connected';
+            localStorage.setItem('yourLocalStorageKey', JSON.stringify(dataObject));
+            $('#imgUserLogin').attr('src', dataObject.picture);
+         }
+
          // handle unlink/link google
          $('#statusConnectGoogle').click(() => {
             if ($('#statusConnectGoogle').text() === 'Not connected') {
                window.location.href = 'http://localhost:3000/google';
             } else {
-               const confirmUnconnect = confirm('Are you sure to unconnect?');
+               const confirmUnconnect = confirm('Are you sure to unconnect Google?');
                if (confirmUnconnect) {
                   $('#google').text('Google');
                   $('#statusConnectGoogle').text('Not connected');
@@ -79,7 +92,90 @@
                }
             }
          });
+
+         // handle unlink/link facebook
+         $('#statusConnectFacebook').click(() => {
+            if ($('#statusConnectFacebook').text() === 'Not connected') {
+               window.location.href = 'http://localhost:3000/facebook';
+            } else {
+               const confirmUnconnect = confirm('Are you sure to unconnect Facebook?');
+               if (confirmUnconnect) {
+                  $('#facebook').text('Facebook');
+                  $('#statusConnectFacebook').text('Not connected');
+
+                  const savedData = localStorage.getItem('yourLocalStorageKey');
+                  const dataObject = JSON.parse(savedData);
+                  dataObject.statusFacebook = 'Not connected';
+                  localStorage.setItem('yourLocalStorageKey', JSON.stringify(dataObject));
+
+                  $('#statusConnectFacebook').removeClass('btn-success');
+                  $('#statusConnectFacebook').addClass('btn-light');
+
+                  const deleteGraphlQuery = `
+                    mutation unlinkConnectedFacebook {
+                        unlinkConnectFacebook(email: "${dataObject.email}") {
+                            email
+                        }
+                    }
+                `;
+
+                  $.ajax({
+                     url: 'http://localhost:3000/graphql',
+                     method: 'POST',
+                     contentType: 'application/json',
+                     data: JSON.stringify({
+                        query: deleteGraphlQuery
+                     }),
+                     success: (res) => {
+                        console.log(res);
+                     },
+                     error: (err) => {
+                        console.log(err);
+                     }
+                  });
+               }
+            }
+         });         
+
+         // get loged in email
+         const savedData = localStorage.getItem('yourLocalStorageKey');
+         const dataObject = JSON.parse(savedData);
+         const email = dataObject.email;
+
+         const getGraphlQuery = `
+         query getSocialAccountsByOwnerEmail {
+  getSocialAccountsByOwnerEmail(email: "${email}") {
+    id
+    name
+    email
+    socialAccounts {
+      id
+      email
+      provider
+      picture
+    }
+  }
+}`;
+
+         $.ajax({
+            url: 'http://localhost:3000/graphql',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+               query: getGraphlQuery
+            }),
+            success: (res) => {
+               // save res to local storage
+               localStorage.setItem('socialAccounts', JSON.stringify(res.data.getSocialAccountsByOwnerEmail));
+            },
+            error: (err) => {
+               console.log(err);
+            }
+         });
+         //end
       });
+
+
 
    </script>
 </head>
@@ -91,7 +187,7 @@
          <div class="padding">
             <div id="imageContainer" style="display: flex; justify-content: center; align-items: center;">
                <img src="" id="imgUserLogin" width="100px" style="border-radius: 50%;">
-           </div>           
+            </div>
             <div class="row text-center">
                <div class="col pb-5">
                   <div class="h1 text-light font-weight-bold">
@@ -135,7 +231,11 @@
                               <img src="../images/logo_facebook.png" width="30px" alt="" srcset="">
                            </div>
                            <div class="flex">
-                              <div href="#" class="item-author text-color" data-abc="true">Facebook</div>
+                              <div href="#" class="item-author text-color" data-abc="true">
+                                 <span id="facebook">
+                                    Facebook
+                                 </span>
+                              </div>
                            </div>
                            <div class="no-wrap">
                               <div class="item-date text-muted text-sm d-none d-md-block">
