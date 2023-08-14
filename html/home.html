@@ -11,7 +11,9 @@
    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+   <script src="../js/home.js"></script>
    <script>
+
       $(document).ready(function () {
          // load data login
          function getQueryParam(param) {
@@ -31,41 +33,41 @@
             $('#mainTitle').text(`Welcome back ${dataObject.firstName} ${dataObject.lastName}!`);
             dataObject.statusGoogle = 'Connected';
             localStorage.setItem('yourLocalStorageKey', JSON.stringify(dataObject));
+            $('#imgUserLogin').attr('src', dataObject.picture);
          }
 
          // handle unlink/link google
          $('#statusConnectGoogle').click(() => {
-            if ($('#statusConnectGoogle').text() === 'Unconnected') {
+            if ($('#statusConnectGoogle').text() === 'Not connected') {
                window.location.href = 'http://localhost:3000/google';
             } else {
                const confirmUnconnect = confirm('Are you sure to unconnect?');
                if (confirmUnconnect) {
                   $('#google').text('Google');
-                  $('#statusConnectGoogle').text('Unconnected');
+                  $('#statusConnectGoogle').text('Not connected');
+
                   const savedData = localStorage.getItem('yourLocalStorageKey');
                   const dataObject = JSON.parse(savedData);
-                  dataObject.statusGoogle = 'Unconnected';
+                  dataObject.statusGoogle = 'Not connected';
                   localStorage.setItem('yourLocalStorageKey', JSON.stringify(dataObject));
+
                   $('#statusConnectGoogle').removeClass('btn-success');
                   $('#statusConnectGoogle').addClass('btn-light');
 
                   const deleteGraphlQuery = `
-                  mutation unlinkConnectedGoogle {
-                     unlinkConnectGoogle(email: "${dataObject.email}") {
-  		                  email
-                     }
-                  }
-                  `;
+                    mutation unlinkConnectedGoogle {
+                        unlinkConnectGoogle(email: "${dataObject.email}") {
+                            email
+                        }
+                    }
+                `;
 
                   $.ajax({
                      url: 'http://localhost:3000/graphql',
                      method: 'POST',
                      contentType: 'application/json',
                      data: JSON.stringify({
-                        query: deleteGraphlQuery,
-                        variables: {
-                           ownerId: dataObject.owner.id
-                        }
+                        query: deleteGraphlQuery
                      }),
                      success: (res) => {
                         console.log(res);
@@ -73,19 +75,23 @@
                      error: (err) => {
                         console.log(err);
                      }
-                  })
+                  });
                }
             }
-         })
+         });
       });
+
    </script>
 </head>
 
 <body>
-   <div class="container-fluid py-4 mx-auto"
+   <div class="container-fluid py-1 mx-auto"
       style="background-image: url('../images/bg-01.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat;">
       <div class="page-content page-container" id="page-content">
          <div class="padding">
+            <div id="imageContainer" style="display: flex; justify-content: center; align-items: center;">
+               <img src="" id="imgUserLogin" width="100px" style="border-radius: 50%;">
+           </div>           
             <div class="row text-center">
                <div class="col pb-5">
                   <div class="h1 text-light font-weight-bold">
@@ -115,8 +121,8 @@
                            <div class="no-wrap">
                               <div class="item-date text-muted text-sm d-none d-md-block">
                                  <a href="#">
-                                    <button id="statusConnectGoogle" class="btn btn-success">
-                                       Unconnected
+                                    <button id="statusConnectGoogle" class="btn btn-light">
+                                       Not connected
                                     </button>
                                  </a>
                               </div>
@@ -134,7 +140,9 @@
                            <div class="no-wrap">
                               <div class="item-date text-muted text-sm d-none d-md-block">
                                  <a href="#">
-                                    Unconnected
+                                    <button id="statusConnectFacebook" class="btn btn-light">
+                                       Not connected
+                                    </button>
                                  </a>
                               </div>
                            </div>
@@ -151,7 +159,9 @@
                            <div class="no-wrap">
                               <div class="item-date text-muted text-sm d-none d-md-block">
                                  <a href="#">
-                                    Unconnected
+                                    <button id="statusConnectGithub" class="btn btn-light">
+                                       Not connected
+                                    </button>
                                  </a>
                               </div>
                            </div>
@@ -168,7 +178,9 @@
                            <div class="no-wrap">
                               <div class="item-date text-muted text-sm d-none d-md-block">
                                  <a href="#">
-                                    Unconnected
+                                    <button id="statusConnectLinkedin" class="btn btn-light">
+                                       Not connected
+                                    </button>
                                  </a>
                               </div>
                            </div>
