@@ -27,7 +27,11 @@
          localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
 
          // load data to interface
-         $('#imgUserLogin').attr('src', dataFromQueryParamObject.socialAccounts[0].picture);
+         try {
+            $('#imgUserLogin').attr('src', dataFromQueryParamObject.socialAccounts[0].picture);
+         } catch (error) {
+            console.log(error);
+         }
          $('#mainTitle').text(`Welcome back, ${dataFromQueryParamObject.name} !`);
 
          for (let i = 0; i < dataFromQueryParamObject.socialAccounts.length; i++) {
@@ -53,6 +57,12 @@
 
          // handle link/unlink button google
          $('#statusConnectGoogle').click(function () {
+            if (dataFromQueryParamObject.statusGoogle == false) {
+               // href to google login
+               window.location.href = 'http://localhost:3000/google';
+               return;
+            }
+
             const confirmUnlinkGoogle = confirm('Are you sure to unlink this google account?');
             if (confirmUnlinkGoogle == false) {
                return;
