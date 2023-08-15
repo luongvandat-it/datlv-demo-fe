@@ -36,7 +36,7 @@
             $('#imgUserLogin').attr('src', dataObject.picture);
          }
 
-         if(dataFromQueryParamObject.provider === 'facebook') {
+         if (dataFromQueryParamObject.provider === 'facebook') {
             localStorage.setItem('yourLocalStorageKey', dataFromQueryParam);
             const savedData = localStorage.getItem('yourLocalStorageKey');
             console.log('Data from localStorage:', savedData);
@@ -63,9 +63,6 @@
                   const dataObject = JSON.parse(savedData);
                   dataObject.statusGoogle = 'Not connected';
                   localStorage.setItem('yourLocalStorageKey', JSON.stringify(dataObject));
-
-                  $('#statusConnectGoogle').removeClass('btn-success');
-                  $('#statusConnectGoogle').addClass('btn-light');
 
                   const deleteGraphlQuery = `
                     mutation unlinkConnectedGoogle {
@@ -112,11 +109,12 @@
                   $('#statusConnectFacebook').addClass('btn-light');
 
                   const deleteGraphlQuery = `
-                    mutation unlinkConnectedFacebook {
-                        unlinkConnectFacebook(email: "${dataObject.email}") {
-                            email
-                        }
-                    }
+                  mutation unlinkConnectFacebook {
+	                  unlinkConnectFacebook(email: "${dataObject.email}") {
+		                  email
+                        provider
+                     }
+                  } 
                 `;
 
                   $.ajax({
@@ -135,7 +133,7 @@
                   });
                }
             }
-         });         
+         });
 
          // get loged in email
          const savedData = localStorage.getItem('yourLocalStorageKey');
