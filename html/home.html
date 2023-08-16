@@ -32,7 +32,7 @@
          } catch (error) {
             console.log(error);
          }
-         $('#mainTitle').text(`Welcome back, ${dataFromQueryParamObject.name} !`);
+         $('#mainTitle').text(`Welcome back, ${dataFromQueryParamObject.email} !`);
 
          for (let i = 0; i < dataFromQueryParamObject.socialAccounts.length; i++) {
             if (dataFromQueryParamObject.socialAccounts[i].provider == 'google') {
@@ -57,10 +57,17 @@
 
          // handle link/unlink button google
          $('#statusConnectGoogle').click(function () {
-            if (dataFromQueryParamObject.statusGoogle == false) {
-               // href to google login
-               window.location.href = 'http://localhost:3000/google';
-               return;
+            try {
+               if (dataFromQueryParamObject.statusGoogle == false) {
+                  dataFromQueryParamObject.statusGoogle = true;
+                  localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
+                  window.location.href = 'http://localhost:3000/googleRelink';
+                  return;
+               }
+            } catch (error) {
+               alert(error.message);
+               alert('Account linked to another account!');
+               window.location.href = 'http://localhost:5501/html/home.html';
             }
 
             const confirmUnlinkGoogle = confirm('Are you sure to unlink this google account?');
@@ -96,7 +103,7 @@
                         if (dataFromQueryParamObject.socialAccounts[i].provider == 'google') {
                            dataFromQueryParamObject.socialAccounts.splice(i, 1);
                         }
-                     } 
+                     }
                      console.log(dataFromQueryParamObject);
 
                      localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
@@ -109,6 +116,19 @@
 
          // handle link/unlink button facebook
          $('#statusConnectFacebook').click(() => {
+            try {
+               if (dataFromQueryParamObject.statusFacebook == false) {
+                  dataFromQueryParamObject.statusFacebook = true;
+                  localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
+                  window.location.href = 'http://localhost:3000/facebookRelink';
+                  return;
+               }
+            } catch (error) {
+               alert(error.message);
+               alert('Account linked to another account!');
+               window.location.href = 'http://localhost:5501/html/home.html';
+            }
+
             const confirmUnlinkFacebook = confirm('Are you sure to unlink this facebook account?');
             if (confirmUnlinkFacebook == false) {
                return;
@@ -142,7 +162,7 @@
                         if (dataFromQueryParamObject.socialAccounts[i].provider == 'facebook') {
                            dataFromQueryParamObject.socialAccounts.splice(i, 1);
                         }
-                     } 
+                     }
                      console.log(dataFromQueryParamObject);
 
                      localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
@@ -150,6 +170,15 @@
                })
             } else {
                // call ajax to insert data
+            }
+         })
+
+         $('#btnClickThisToTest').click(() => {
+            try {
+               window.location.href = 'http://localhost:3000/googlerelink/';
+            } catch (error) {
+               console.log(error);
+               alert('Account linked to another account!');
             }
          })
       });
@@ -226,7 +255,7 @@
 
                         <div class="list-item p-4" data-id="13" data-item-sortable-id="0" draggable="true" role="option"
                            aria-grabbed="false">
-                           <div>
+                           <div id="btnClickThisToTest">
                               <img src="../images/logo_github.png" width="30px" alt="" srcset="">
                            </div>
                            <div class="flex">
