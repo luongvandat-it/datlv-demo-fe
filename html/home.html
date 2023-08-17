@@ -24,11 +24,12 @@
          console.log(dataFromQueryParamObject);
          dataFromQueryParamObject.statusGoogle = false
          dataFromQueryParamObject.statusFacebook = false
+         dataFromQueryParamObject.statusGithub = false
          localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
 
          // load data to interface
          try {
-            $('#imgUserLogin').attr('src', dataFromQueryParamObject.socialAccounts[0].picture);
+            $('#imgUserLogin').attr('src', dataFromQueryParamObject.image);
          } catch (error) {
             console.log(error);
          }
@@ -53,7 +54,24 @@
                dataFromQueryParamObject.statusFacebook = true;
                localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
             }
+
+            if (dataFromQueryParamObject.socialAccounts[i].provider == 'github') {
+               $('#github').text(dataFromQueryParamObject.socialAccounts[i].firstName);
+               $('#statusConnectGithub').text('Connected');
+               $('#statusConnectGithub').removeClass('btn-light');
+               $('#statusConnectGithub').addClass('btn-success');
+               dataFromQueryParamObject.statusGithub = true;
+               localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
+            }
          }
+
+         // handle relink
+         // if (dataFromQueryParamObject.message) {
+         //    alert(dataFromQueryParamObject.message);
+         //    delete dataFromQueryParamObject.message;
+         //    delete dataFromQueryParamObject.statusCode;
+         //    localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
+         // }
 
          // handle link/unlink button google
          $('#statusConnectGoogle').click(function () {
@@ -173,12 +191,60 @@
             }
          })
 
-         $('#btnClickThisToTest').click(() => {
+         $('#statusConnectGithub').click(() => {
             try {
-               window.location.href = 'http://localhost:3000/googlerelink/';
+               if (dataFromQueryParamObject.statusGithub == false) {
+                  dataFromQueryParamObject.statusGithub = true;
+                  localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
+                  window.location.href = 'http://localhost:3000/github';
+                  return;
+               }
             } catch (error) {
-               console.log(error);
+               alert(error.message);
                alert('Account linked to another account!');
+               window.location.href = 'http://localhost:5501/html/home.html';
+            }
+
+            const confirmUnlinkGithub = confirm('Are you sure to unlink this github account?');
+            if (confirmUnlinkGithub == false) {
+               return;
+            }
+
+            const usernameGithub = dataFromQueryParamObject.socialAccounts.filter(function (item) {
+               return item.provider == 'github';
+            })[0].firstName;
+
+            if (dataFromQueryParamObject.statusGithub == true) {
+               $.ajax({
+                  url: 'http://localhost:3000/graphql',
+                  method: 'POST',
+                  contentType: 'application/json',
+                  data: JSON.stringify({
+                     query: `mutation unlinkConnectedGithub {
+                           unlinkConnectGithub(username: "${usernameGithub}") {
+                              firstName
+                           }
+                        }`
+                  }),
+                  success: function (result) {
+                     console.log(result);
+                     $('#github').text('Github');
+                     $('#statusConnectGithub').text('Not connected');
+                     $('#statusConnectGithub').removeClass('btn-success');
+                     $('#statusConnectGithub').addClass('btn-light');
+                     dataFromQueryParamObject.statusGithub = false;
+                     // delete data of dataFromQueryParamObject.socialAccounts have provider is github
+                     for (let i = 0; i < dataFromQueryParamObject.socialAccounts.length; i++) {
+                        if (dataFromQueryParamObject.socialAccounts[i].provider == 'github') {
+                           dataFromQueryParamObject.socialAccounts.splice(i, 1);
+                        }
+                     }
+                     console.log(dataFromQueryParamObject);
+                     localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
+                  }
+               })
+            } else {
+               // call ajax to insert data
             }
          })
       });
@@ -255,11 +321,15 @@
 
                         <div class="list-item p-4" data-id="13" data-item-sortable-id="0" draggable="true" role="option"
                            aria-grabbed="false">
-                           <div id="btnClickThisToTest">
+                           <div>
                               <img src="../images/logo_github.png" width="30px" alt="" srcset="">
                            </div>
                            <div class="flex">
-                              <div href="#" class="item-author text-color" data-abc="true">Github</div>
+                              <div href="#" class="item-author text-color" data-abc="true">
+                                 <div id="github">
+                                    Github
+                                 </div>
+                              </div>
                            </div>
                            <div class="no-wrap">
                               <div class="item-date text-muted text-sm d-none d-md-block">
