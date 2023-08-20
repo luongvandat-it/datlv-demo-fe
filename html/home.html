@@ -11,16 +11,276 @@
    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+   <script src="../js/home.js"></script>
+   <script>
+      $(document).ready(function () {
+         // load data login
+         function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+         }
+         const dataFromQueryParam = getQueryParam('data');
+         const dataFromQueryParamObject = JSON.parse(dataFromQueryParam);
+         console.log(dataFromQueryParamObject);
+         dataFromQueryParamObject.statusGoogle = false
+         dataFromQueryParamObject.statusFacebook = false
+         dataFromQueryParamObject.statusGithub = false
+         dataFromQueryParamObject.statusLinkedin = false
+         localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
+
+         // load data to interface
+         try {
+            $('#imgUserLogin').attr('src', dataFromQueryParamObject.image);
+         } catch (error) {
+            console.log(error);
+         }
+         $('#mainTitle').text(`Welcome back, ${dataFromQueryParamObject.email} !`);
+
+         for (let i = 0; i < dataFromQueryParamObject.socialAccounts.length; i++) {
+            if (dataFromQueryParamObject.socialAccounts[i].provider == 'google') {
+               $('#google').text(dataFromQueryParamObject.socialAccounts[i].email);
+               $('#statusConnectGoogle').text('Connected');
+               $('#statusConnectGoogle').removeClass('btn-light');
+               $('#statusConnectGoogle').addClass('btn-success');
+               dataFromQueryParamObject.statusGoogle = true;
+               localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
+            }
+
+            if (dataFromQueryParamObject.socialAccounts[i].provider == 'facebook') {
+               $('#facebook').text(dataFromQueryParamObject.socialAccounts[i].firstName + ' '
+                  + dataFromQueryParamObject.socialAccounts[i].lastName);
+               $('#statusConnectFacebook').text('Connected');
+               $('#statusConnectFacebook').removeClass('btn-light');
+               $('#statusConnectFacebook').addClass('btn-success');
+               dataFromQueryParamObject.statusFacebook = true;
+               localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
+            }
+
+            if (dataFromQueryParamObject.socialAccounts[i].provider == 'github') {
+               $('#github').text(dataFromQueryParamObject.socialAccounts[i].firstName);
+               $('#statusConnectGithub').text('Connected');
+               $('#statusConnectGithub').removeClass('btn-light');
+               $('#statusConnectGithub').addClass('btn-success');
+               dataFromQueryParamObject.statusGithub = true;
+               localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
+            }
+
+            if (dataFromQueryParamObject.socialAccounts[i].provider == 'linkedin') {
+               $('#linkedin').text(dataFromQueryParamObject.socialAccounts[i].firstName + ' '
+                  + dataFromQueryParamObject.socialAccounts[i].lastName);
+               $('#statusConnectLinkedin').text('Connected');
+               $('#statusConnectLinkedin').removeClass('btn-light');
+               $('#statusConnectLinkedin').addClass('btn-success');
+               dataFromQueryParamObject.statusLinkedin = true;
+               localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
+            }
+         }
+
+         // handle link/unlink button google
+         $('#statusConnectGoogle').click(function () {
+            try {
+               if (dataFromQueryParamObject.statusGoogle == false) {
+                  dataFromQueryParamObject.statusGoogle = true;
+                  localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
+                  const customParam = "somecustomvalue123213hehe"; // Replace with the actual value
+                  const encodedCustomParam = encodeURIComponent(customParam);
+                  const redirectUrl = `http://localhost:3000/googleRelink?state=${encodedCustomParam}`;
+
+                  console.log("before", encodedCustomParam);
+                  window.location.href = redirectUrl;
+                  console.log("after", encodedCustomParam);
+                  return;
+               }
+            } catch (error) {
+               alert(error.message);
+               alert('Account linked to another account!');
+               window.location.href = 'http://localhost:5501/html/home.html';
+            }
+
+
+            const confirmUnlinkGoogle = confirm('Are you sure to unlink this google account?');
+            if (confirmUnlinkGoogle == false) {
+               return;
+            }
+
+            const emailGoogle = dataFromQueryParamObject.socialAccounts.filter(function (item) {
+               return item.provider == 'google';
+            })[0].email;
+
+            if (dataFromQueryParamObject.statusGoogle == true) {
+               $.ajax({
+                  url: `http://localhost:3000/google/unlink/${emailGoogle}`,
+                  method: 'DELETE',
+                  contentType: 'application/json',
+                  success: function (result) {
+                     console.log(result);
+                     $('#google').text('Google');
+                     $('#statusConnectGoogle').text('Not connected');
+                     $('#statusConnectGoogle').removeClass('btn-success');
+                     $('#statusConnectGoogle').addClass('btn-light');
+                     dataFromQueryParamObject.statusGoogle = false;
+                     // delete data of dataFromQueryParamObject.socialAccounts have provider is google
+                     for (let i = 0; i < dataFromQueryParamObject.socialAccounts.length; i++) {
+                        if (dataFromQueryParamObject.socialAccounts[i].provider == 'google') {
+                           dataFromQueryParamObject.socialAccounts.splice(i, 1);
+                        }
+                     }
+                     console.log(dataFromQueryParamObject);
+
+                     localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
+                  }
+               })
+            } else {
+               // call ajax to insert data
+            }
+         })
+
+         // handle link/unlink button facebook
+         $('#statusConnectFacebook').click(() => {
+            try {
+               if (dataFromQueryParamObject.statusFacebook == false) {
+                  dataFromQueryParamObject.statusFacebook = true;
+                  localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
+                  window.location.href = 'http://localhost:3000/facebookRelink';
+                  return;
+               }
+            } catch (error) {
+               alert(error.message);
+               alert('Account linked to another account!');
+               window.location.href = 'http://localhost:5501/html/home.html';
+            }
+
+            const confirmUnlinkFacebook = confirm('Are you sure to unlink this facebook account?');
+            if (confirmUnlinkFacebook == false) {
+               return;
+            }
+
+            const emailFacebook = dataFromQueryParamObject.socialAccounts.filter(function (item) {
+               return item.provider == 'facebook';
+            })[0].email;
+
+            if (dataFromQueryParamObject.statusFacebook == true) {
+               $.ajax({
+                  url: `http://localhost:3000/facebook/unlink/${emailFacebook}`,
+                  method: 'DELETE',
+                  contentType: 'application/json',
+                  success: function (result) {
+                     console.log(result);
+                     $('#facebook').text('Facebook');
+                     $('#statusConnectFacebook').text('Not connected');
+                     $('#statusConnectFacebook').removeClass('btn-success');
+                     $('#statusConnectFacebook').addClass('btn-light');
+                     dataFromQueryParamObject.statusFacebook = false;
+                     // delete data of dataFromQueryParamObject.socialAccounts have provider is facebook
+                     for (let i = 0; i < dataFromQueryParamObject.socialAccounts.length; i++) {
+                        if (dataFromQueryParamObject.socialAccounts[i].provider == 'facebook') {
+                           dataFromQueryParamObject.socialAccounts.splice(i, 1);
+                        }
+                     }
+                     console.log(dataFromQueryParamObject);
+
+                     localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
+                  }
+               })
+            } else {
+               // call ajax to insert data
+            }
+         })
+
+         $('#statusConnectGithub').click(() => {
+            try {
+               if (dataFromQueryParamObject.statusGithub == false) {
+                  dataFromQueryParamObject.statusGithub = true;
+                  localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
+                  window.location.href = 'http://localhost:3000/github';
+                  return;
+               }
+            } catch (error) {
+               alert(error.message);
+               alert('Account linked to another account!');
+               window.location.href = 'http://localhost:5501/html/home.html';
+            }
+
+            const confirmUnlinkGithub = confirm('Are you sure to unlink this github account?');
+            if (confirmUnlinkGithub == false) {
+               return;
+            }
+
+            const usernameGithub = dataFromQueryParamObject.socialAccounts.filter(function (item) {
+               return item.provider == 'github';
+            })[0].firstName;
+
+            if (dataFromQueryParamObject.statusGithub == true) {
+               $.ajax({
+                  url: `http://localhost:3000/github/unlink/${usernameGithub}`,
+                  method: 'DELETE',
+                  contentType: 'application/json',
+                  success: function (result) {
+                     console.log(result);
+                     $('#github').text('Github');
+                     $('#statusConnectGithub').text('Not connected');
+                     $('#statusConnectGithub').removeClass('btn-success');
+                     $('#statusConnectGithub').addClass('btn-light');
+                     dataFromQueryParamObject.statusGithub = false;
+                     // delete data of dataFromQueryParamObject.socialAccounts have provider is github
+                     for (let i = 0; i < dataFromQueryParamObject.socialAccounts.length; i++) {
+                        if (dataFromQueryParamObject.socialAccounts[i].provider == 'github') {
+                           dataFromQueryParamObject.socialAccounts.splice(i, 1);
+                        }
+                     }
+                     console.log(dataFromQueryParamObject);
+                     localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
+                  }
+               })
+            } else {
+               // call ajax to insert data
+            }
+         })
+
+         $('#statusConnectLinkedin').click(() => {
+            try {
+               if (dataFromQueryParamObject.statusLinkedin == false) {
+                  dataFromQueryParamObject.statusLinkedin = true;
+                  localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
+                  window.location.href = 'http://localhost:3000/linkedin';
+                  return;
+               }
+            } catch (error) {
+               alert(error.message);
+               alert('Account linked to another account!');
+               window.location.href = 'http://localhost:5501/html/home.html';
+            }
+         })
+
+         $('#btnLogout').click(() => {
+            const confirmLogout = confirm('Are you sure to logout?');
+            if (confirmLogout == false) {
+               return;
+            }
+            localStorage.clear();
+            window.location.href = 'http://localhost:5501/index.html';
+         })
+      });
+   </script>
 </head>
 
 <body>
-   <div class="container-fluid py-4 mx-auto"
+   <div class="container-fluid py-1 mx-auto"
       style="background-image: url('../images/bg-01.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat;">
       <div class="page-content page-container" id="page-content">
          <div class="padding">
+            <div id="btnLogout" class="btn btn-light" style="float: left;">
+               Logout
+            </div>
+            <div id="imageContainer" style="display: flex; justify-content: center; align-items: center;">
+               <img src="" id="imgUserLogin" width="100px" style="border-radius: 50%;">
+            </div>
             <div class="row text-center">
                <div class="col pb-5">
-                  <div class="h1 text-light font-weight-bold">Social Accounts
+                  <div class="h1 text-light font-weight-bold">
+                     <span id="mainTitle">
+                        Social Accounts
+                     </span>
                   </div>
                </div>
             </div>
@@ -33,11 +293,22 @@
                            <div>
                               <img src="../images/logo_google.png" width="30px" alt="" srcset="">
                            </div>
+
                            <div class="flex">
-                              <div href="#" class="item-author text-color" data-abc="true">Google</div>
+                              <div href="#" class="item-author text-color" data-abc="true">
+                                 <span id="google">
+                                    Google
+                                 </span>
+                              </div>
                            </div>
                            <div class="no-wrap">
-                              <div class="item-date text-muted text-sm d-none d-md-block">Unconnected</div>
+                              <div class="item-date text-muted text-sm d-none d-md-block">
+                                 <a href="#">
+                                    <button id="statusConnectGoogle" class="btn btn-light">
+                                       Not connected
+                                    </button>
+                                 </a>
+                              </div>
                            </div>
                         </div>
 
@@ -47,10 +318,20 @@
                               <img src="../images/logo_facebook.png" width="30px" alt="" srcset="">
                            </div>
                            <div class="flex">
-                              <div href="#" class="item-author text-color" data-abc="true">Facebook</div>
+                              <div href="#" class="item-author text-color" data-abc="true">
+                                 <span id="facebook">
+                                    Facebook
+                                 </span>
+                              </div>
                            </div>
                            <div class="no-wrap">
-                              <div class="item-date text-muted text-sm d-none d-md-block">Unconnected</div>
+                              <div class="item-date text-muted text-sm d-none d-md-block">
+                                 <a href="#">
+                                    <button id="statusConnectFacebook" class="btn btn-light">
+                                       Not connected
+                                    </button>
+                                 </a>
+                              </div>
                            </div>
                         </div>
 
@@ -60,10 +341,20 @@
                               <img src="../images/logo_github.png" width="30px" alt="" srcset="">
                            </div>
                            <div class="flex">
-                              <div href="#" class="item-author text-color" data-abc="true">Github</div>
+                              <div href="#" class="item-author text-color" data-abc="true">
+                                 <div id="github">
+                                    Github
+                                 </div>
+                              </div>
                            </div>
                            <div class="no-wrap">
-                              <div class="item-date text-muted text-sm d-none d-md-block">Unconnected</div>
+                              <div class="item-date text-muted text-sm d-none d-md-block">
+                                 <a href="#">
+                                    <button id="statusConnectGithub" class="btn btn-light">
+                                       Not connected
+                                    </button>
+                                 </a>
+                              </div>
                            </div>
                         </div>
 
@@ -76,7 +367,13 @@
                               <div href="#" class="item-author text-color" data-abc="true">Linkedin</div>
                            </div>
                            <div class="no-wrap">
-                              <div class="item-date text-muted text-sm d-none d-md-block">Unconnected</div>
+                              <div class="item-date text-muted text-sm d-none d-md-block">
+                                 <a href="#">
+                                    <button id="statusConnectLinkedin" class="btn btn-light">
+                                       Not connected
+                                    </button>
+                                 </a>
+                              </div>
                            </div>
                         </div>
                      </div>
