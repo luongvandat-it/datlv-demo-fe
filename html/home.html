@@ -25,6 +25,7 @@
          dataFromQueryParamObject.statusGoogle = false
          dataFromQueryParamObject.statusFacebook = false
          dataFromQueryParamObject.statusGithub = false
+         dataFromQueryParamObject.statusLinkedin = false
          localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
 
          // load data to interface
@@ -63,15 +64,17 @@
                dataFromQueryParamObject.statusGithub = true;
                localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
             }
-         }
 
-         // handle relink
-         // if (dataFromQueryParamObject.message) {
-         //    alert(dataFromQueryParamObject.message);
-         //    delete dataFromQueryParamObject.message;
-         //    delete dataFromQueryParamObject.statusCode;
-         //    localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
-         // }
+            if (dataFromQueryParamObject.socialAccounts[i].provider == 'linkedin') {
+               $('#linkedin').text(dataFromQueryParamObject.socialAccounts[i].firstName + ' '
+                  + dataFromQueryParamObject.socialAccounts[i].lastName);
+               $('#statusConnectLinkedin').text('Connected');
+               $('#statusConnectLinkedin').removeClass('btn-light');
+               $('#statusConnectLinkedin').addClass('btn-success');
+               dataFromQueryParamObject.statusLinkedin = true;
+               localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
+            }
+         }
 
          // handle link/unlink button google
          $('#statusConnectGoogle').click(function () {
@@ -79,7 +82,13 @@
                if (dataFromQueryParamObject.statusGoogle == false) {
                   dataFromQueryParamObject.statusGoogle = true;
                   localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
-                  window.location.href = 'http://localhost:3000/googleRelink';
+                  const customParam = "somecustomvalue123213hehe"; // Replace with the actual value
+                  const encodedCustomParam = encodeURIComponent(customParam);
+                  const redirectUrl = `http://localhost:3000/googleRelink?state=${encodedCustomParam}`;
+
+                  console.log("before", encodedCustomParam);
+                  window.location.href = redirectUrl;
+                  console.log("after", encodedCustomParam);
                   return;
                }
             } catch (error) {
@@ -87,6 +96,7 @@
                alert('Account linked to another account!');
                window.location.href = 'http://localhost:5501/html/home.html';
             }
+
 
             const confirmUnlinkGoogle = confirm('Are you sure to unlink this google account?');
             if (confirmUnlinkGoogle == false) {
@@ -99,16 +109,9 @@
 
             if (dataFromQueryParamObject.statusGoogle == true) {
                $.ajax({
-                  url: 'http://localhost:3000/graphql',
-                  method: 'POST',
+                  url: `http://localhost:3000/google/unlink/${emailGoogle}`,
+                  method: 'DELETE',
                   contentType: 'application/json',
-                  data: JSON.stringify({
-                     query: `mutation unlinkConnectedGoogle {
-                           unlinkConnectGoogle(email: "${emailGoogle}") {
-                              email
-                           }
-                        }`
-                  }),
                   success: function (result) {
                      console.log(result);
                      $('#google').text('Google');
@@ -158,16 +161,9 @@
 
             if (dataFromQueryParamObject.statusFacebook == true) {
                $.ajax({
-                  url: 'http://localhost:3000/graphql',
-                  method: 'POST',
+                  url: `http://localhost:3000/facebook/unlink/${emailFacebook}`,
+                  method: 'DELETE',
                   contentType: 'application/json',
-                  data: JSON.stringify({
-                     query: `mutation unlinkConnectedFacebook {
-                           unlinkConnectFacebook(email: "${emailFacebook}") {
-                              email
-                           }
-                        }`
-                  }),
                   success: function (result) {
                      console.log(result);
                      $('#facebook').text('Facebook');
@@ -216,16 +212,9 @@
 
             if (dataFromQueryParamObject.statusGithub == true) {
                $.ajax({
-                  url: 'http://localhost:3000/graphql',
-                  method: 'POST',
+                  url: `http://localhost:3000/github/unlink/${usernameGithub}`,
+                  method: 'DELETE',
                   contentType: 'application/json',
-                  data: JSON.stringify({
-                     query: `mutation unlinkConnectedGithub {
-                           unlinkConnectGithub(username: "${usernameGithub}") {
-                              firstName
-                           }
-                        }`
-                  }),
                   success: function (result) {
                      console.log(result);
                      $('#github').text('Github');
@@ -247,6 +236,30 @@
                // call ajax to insert data
             }
          })
+
+         $('#statusConnectLinkedin').click(() => {
+            try {
+               if (dataFromQueryParamObject.statusLinkedin == false) {
+                  dataFromQueryParamObject.statusLinkedin = true;
+                  localStorage.setItem('dataFromQueryParamObject', JSON.stringify(dataFromQueryParamObject));
+                  window.location.href = 'http://localhost:3000/linkedin';
+                  return;
+               }
+            } catch (error) {
+               alert(error.message);
+               alert('Account linked to another account!');
+               window.location.href = 'http://localhost:5501/html/home.html';
+            }
+         })
+
+         $('#btnLogout').click(() => {
+            const confirmLogout = confirm('Are you sure to logout?');
+            if (confirmLogout == false) {
+               return;
+            }
+            localStorage.clear();
+            window.location.href = 'http://localhost:5501/index.html';
+         })
       });
    </script>
 </head>
@@ -256,6 +269,9 @@
       style="background-image: url('../images/bg-01.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat;">
       <div class="page-content page-container" id="page-content">
          <div class="padding">
+            <div id="btnLogout" class="btn btn-light" style="float: left;">
+               Logout
+            </div>
             <div id="imageContainer" style="display: flex; justify-content: center; align-items: center;">
                <img src="" id="imgUserLogin" width="100px" style="border-radius: 50%;">
             </div>

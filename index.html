@@ -20,9 +20,9 @@
 <body>
 	<div class="limiter">
 		<div class="container-login100" style="background-image: url('images/bg-01.jpg');">
-			<div class="wrap-login100 p-l-55 p-r-55 p-t-65 p-b-10">
+			<div class="wrap-login100 p-l-55 p-r-55 p-t-45 p-b-10">
 				<form class="login100-form validate-form">
-					<span class="login100-form-title p-b-49">
+					<span class="login100-form-title p-b-25">
 						Login
 					</span>
 
@@ -45,8 +45,10 @@
 							Forgot password?
 						</a>
 					</div>
-
+					
 					<div class="container-login100-form-btn">
+						<div class="g-recaptcha" data-sitekey="6LcKJ7InAAAAACff_YRVOeVyL-b2bHRfX0uPVgH4"></div>
+						
 						<div class="wrap-login100-form-btn">
 							<div class="login100-form-bgbtn"></div>
 							<button type="button" class="login100-form-btn" id="btnLoginManual">
@@ -66,7 +68,7 @@
 							<i class="fa fa-facebook"></i>
 						</a>
 
-						<a href="http://localhost:3000/google" class="login100-social-item bg3 btnLoginGoogle">
+						<a class="login100-social-item bg3 btnLoginGoogle" id="btnLoginGoogle">
 							<i class="fa fa-google"></i>
 						</a>
 					</div>
@@ -86,6 +88,7 @@
 	</div>
 
 	<div id="dropDownSelect1"></div>
+	<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 	<script src="vendor/jquery/jquery-3.2.1.min.js"></script>
 	<script src="vendor/animsition/js/animsition.min.js"></script>
 	<script src="vendor/bootstrap/js/popper.js"></script>
@@ -98,12 +101,18 @@
 	<script>
 		$(document).ready(() => {
 			localStorage.clear();
+			$('#btnLoginGoogle').click(() => {
+				window.location.href = 'http://localhost:3000/google';
+			});
+
 			$('#btnLoginManual').click(async () => {
 				const userLogin = {
 					// email: $('#txtLoginEmail').val(),
 					// password: $('#txtLoginPassword').val()
-					email: 'datlv@gmail.com',
-					password: 'Datlv@12345'
+					email: 'datnehehe@gmail.com',
+					password: 'Idontknow@111',
+					// recaptcha: grecaptcha.getResponse()
+					// recaptcha: "6LcKJ7InAAAAACff_YRVOeVyL-b2bHRfX0uPVgH4"
 				};
 
 				// First AJAX request
